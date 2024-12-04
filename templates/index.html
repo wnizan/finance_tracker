@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מעקב מניות וביטקוין</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --light-bg: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--light-bg) 0%, #bdc3c7 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        .form-select, .form-control {
+            border: 2px solid #ddd;
+            padding: 12px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus, .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin: 30px 0;
+        }
+
+        .prediction-section {
+            background: var(--light-bg);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .prediction-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .current-patterns {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .pattern-card {
+            background: var(--light-bg);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+            transition: transform 0.3s ease;
+        }
+
+        .pattern-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .pattern-card h4 {
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .pattern-card h4 i {
+            margin-left: 10px;
+        }
+
+        .bullish {
+            border-right: 5px solid var(--success-color);
+        }
+
+        .bearish {
+            border-right: 5px solid var(--danger-color);
+        }
+
+        .bullish h4 {
+            color: var(--success-color);
+        }
+
+        .bearish h4 {
+            color: var(--danger-color);
+        }
+
+        .price-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .price-change {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .bullish .price-change {
+            color: var(--success-color);
+        }
+
+        .bearish .price-change {
+            color: var(--danger-color);
+        }
+
+        .symbol-section {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .symbol-icon {
+            font-size: 1.5em;
+            margin-left: 10px;
+            color: var(--accent-color);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .live-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">
+            <i class="fas fa-chart-line symbol-icon"></i>
+            מעקב מניות וביטקוין
+            <span class="live-indicator"></span>
+        </h1>
+        
+        <div class="symbol-section">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <select id="symbolSelect" class="form-select">
+                            <option value="^GSPC">S&P 500</option>
+                            <option value="BTC-USD">ביטקוין</option>
+                            <option value="AAPL">Apple</option>
+                            <option value="GOOGL">Google</option>
+                            <option value="MSFT">Microsoft</option>
+                            <option value="AMZN">Amazon</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-plus"></i>
+                        </span>
+                        <input type="text" id="customSymbol" class="form-control" placeholder="הכנס סמל מניה מותאם אישית">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div id="priceChart"></div>
+        </div>
+
+        <div class="current-patterns" id="currentPatterns">
+            <h3>
+                <i class="fas fa-shapes"></i>
+                תבניות נוכחיות
+            </h3>
+            <div id="patternsList"></div>
+        </div>
+
+        <div class="prediction-section">
+            <h3>
+                <i class="fas fa-crystal-ball"></i>
+                תחזיות
+            </h3>
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>
+                        <i class="fas fa-clock"></i>
+                        3 ימים הקרובים
+                    </h5>
+                    <div id="prediction3d"></div>
+                </div>
+                <div class="col-md-4">
+                    <h5>
+                        <i class="fas fa-calendar-week"></i>
+                        שבוע הקרוב
+                    </h5>
+                    <div id="prediction1w"></div>
+                </div>
+                <div class="col-md-4">
+                    <h5>
+                        <i class="fas fa-calendar-alt"></i>
+                        חודש הקרוב
+                    </h5>
+                    <div id="prediction1m"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateChart(symbol) {
+            $.get(`/get_data?symbol=${symbol}`, function(data) {
+                const historicalTrace = {
+                    x: data.historical.dates,
+                    y: data.historical.prices,
+                    type: 'scatter',
+                    name: 'Historical',
+                    line: {
+                        color: '#2c3e50',
+                        width: 2
+                    }
+                };
+
+                const pred3dTrace = {
+                    x: data.predictions['3d'].dates,
+                    y: data.predictions['3d'].prices,
+                    type: 'scatter',
+                    name: '3 Days Prediction',
+                    line: {
+                        color: '#3498db',
+                        width: 2,
+                        dash: 'dot'
+                    }
+                };
+
+                const pred1wTrace = {
+                    x: data.predictions['1w'].dates,
+                    y: data.predictions['1w'].prices,
+                    type: 'scatter',
+                    name: '1 Week Prediction',
+                    line: {
+                        color: '#e67e22',
+                        width: 2,
+                        dash: 'dot'
+                    }
+                };
+
+                const pred1mTrace = {
+                    x: data.predictions['1m'].dates,
+                    y: data.predictions['1m'].prices,
+                    type: 'scatter',
+                    name: '1 Month Prediction',
+                    line: {
+                        color: '#9b59b6',
+                        width: 2,
+                        dash: 'dot'
+                    }
+                };
+
+                const layout = {
+                    title: {
+                        text: 'מחיר היסטורי, תחזיות ותבניות טכניות',
+                        font: {
+                            size: 24,
+                            color: '#2c3e50'
+                        }
+                    },
+                    xaxis: {
+                        title: 'תאריך',
+                        gridcolor: '#ecf0f1'
+                    },
+                    yaxis: {
+                        title: 'מחיר',
+                        gridcolor: '#ecf0f1'
+                    },
+                    paper_bgcolor: 'white',
+                    plot_bgcolor: 'white',
+                    annotations: data.patterns.annotations,
+                    shapes: data.patterns.shapes,
+                    hovermode: 'x unified'
+                };
+
+                Plotly.newPlot('priceChart', [historicalTrace, pred3dTrace, pred1wTrace, pred1mTrace], layout);
+
+                const patternsList = document.getElementById('patternsList');
+                patternsList.innerHTML = '';
+                
+                if (data.patterns.current_patterns.length === 0) {
+                    patternsList.innerHTML = `
+                        <div class="pattern-card">
+                            <h4>
+                                <i class="fas fa-info-circle"></i>
+                                אין תבניות פעילות כרגע
+                            </h4>
+                        </div>`;
+                } else {
+                    data.patterns.current_patterns.forEach(pattern => {
+                        const patternClass = pattern.prediction === 'Bullish' ? 'bullish' : 'bearish';
+                        const priceChange = pattern.prediction === 'Bullish' ? 
+                            pattern.potential_gain.toFixed(2) : 
+                            pattern.potential_loss.toFixed(2);
+                        
+                        const icon = pattern.prediction === 'Bullish' ? 
+                            'fa-trending-up' : 'fa-trending-down';
+                        
+                        const card = document.createElement('div');
+                        card.className = `pattern-card ${patternClass}`;
+                        card.innerHTML = `
+                            <h4>
+                                <i class="fas ${icon}"></i>
+                                ${pattern.type}
+                            </h4>
+                            <div class="price-info">
+                                <p>
+                                    <i class="fas fa-chart-line"></i>
+                                    תחזית: ${pattern.prediction === 'Bullish' ? 'עולה' : 'יורדת'}
+                                </p>
+                                <p>
+                                    <i class="fas fa-dollar-sign"></i>
+                                    מחיר נוכחי: ${pattern.current_price.toFixed(2)}
+                                </p>
+                                <p>
+                                    <i class="fas fa-bullseye"></i>
+                                    מחיר יעד: ${pattern.target_price.toFixed(2)}
+                                </p>
+                                <p class="price-change">
+                                    <i class="fas ${pattern.prediction === 'Bullish' ? 'fa-arrow-up' : 'fa-arrow-down'}"></i>
+                                    שינוי צפוי: ${priceChange}%
+                                </p>
+                            </div>
+                        `;
+                        patternsList.appendChild(card);
+                    });
+                }
+
+                const predictionLayout = {
+                    showlegend: false,
+                    paper_bgcolor: 'white',
+                    plot_bgcolor: 'white',
+                    xaxis: {
+                        gridcolor: '#ecf0f1'
+                    },
+                    yaxis: {
+                        gridcolor: '#ecf0f1'
+                    }
+                };
+
+                Plotly.newPlot('prediction3d', [pred3dTrace], {
+                    ...predictionLayout,
+                    title: {
+                        text: 'תחזית ל-3 ימים',
+                        font: { size: 16 }
+                    }
+                });
+
+                Plotly.newPlot('prediction1w', [pred1wTrace], {
+                    ...predictionLayout,
+                    title: {
+                        text: 'תחזית לשבוע',
+                        font: { size: 16 }
+                    }
+                });
+
+                Plotly.newPlot('prediction1m', [pred1mTrace], {
+                    ...predictionLayout,
+                    title: {
+                        text: 'תחזית לחודש',
+                        font: { size: 16 }
+                    }
+                });
+            });
+        }
+
+        $(document).ready(function() {
+            updateChart('^GSPC');
+
+            $('#symbolSelect').change(function() {
+                updateChart($(this).val());
+            });
+
+            $('#customSymbol').change(function() {
+                if ($(this).val()) {
+                    updateChart($(this).val());
+                }
+            });
+        });
+    </script>
+</body>
+</html>
